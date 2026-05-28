@@ -1,0 +1,90 @@
+# Environment variables and secrets
+.env
+.env.*
+.env.local
+.env.*.local
+*.env
+
+# AWS credentials and config
+.aws/
+credentials
+config
+
+# API keys and tokens
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.txt
+secrets.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test files and temporary data
+test-*.txt
+*.tmp
+*.temp
+*_backup
+*_old
+sample_*
+example_*
+
+# Development and build artifacts
+uv.lock
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editor and system files
+.cursorrules
+*~
+.#*
+
+# Development and internal files
+SECURITY_CHECKLIST.md
+*_CHECKLIST.md
+INTERNAL_*.md
+DEVELOPMENT_*.md 

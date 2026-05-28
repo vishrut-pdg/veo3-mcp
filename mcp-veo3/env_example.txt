@@ -1,0 +1,19 @@
+# Google Gemini API Configuration
+# Get your API key from: https://makersuite.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional: Default output directory for generated videos
+DEFAULT_OUTPUT_DIR=generated_videos
+
+# Optional: Default model to use
+DEFAULT_MODEL=veo-3.0-generate-preview
+
+# Optional: Default aspect ratio
+DEFAULT_ASPECT_RATIO=16:9
+
+# Optional: Person generation setting (required for EU/UK/CH/MENA)
+PERSON_GENERATION=dont_allow
+
+# Optional: Polling configuration
+POLL_INTERVAL=10
+MAX_POLL_TIME=600

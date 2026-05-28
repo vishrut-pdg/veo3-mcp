@@ -1,0 +1,48 @@
+{
+  "name": "mcp-veo3",
+  "version": "1.0.0",
+  "description": "MCP Server for Google Veo 3 Video Generation",
+  "server": {
+    "command": "python",
+    "args": ["mcp_veo3.py", "--output-dir", "~/Videos/Generated"],
+    "env": {
+      "GEMINI_API_KEY": "${GEMINI_API_KEY}"
+    }
+  },
+  "tools": [
+    {
+      "name": "generate_video",
+      "description": "Generate a video using Google Veo 3 from a text prompt"
+    },
+    {
+      "name": "generate_video_from_image", 
+      "description": "Generate a video using Google Veo 3 from an image and text prompt"
+    },
+    {
+      "name": "list_generated_videos",
+      "description": "List all generated videos in the output directory"
+    },
+    {
+      "name": "get_video_info",
+      "description": "Get information about a generated video file"
+    }
+  ],
+  "models": {
+    "supported": [
+      "veo-3.0-generate-preview",
+      "veo-3.0-fast-generate-preview", 
+      "veo-2.0-generate-001"
+    ],
+    "default": "veo-3.0-generate-preview"
+  },
+  "capabilities": {
+    "text_to_video": true,
+    "image_to_video": true,
+    "audio_generation": true,
+    "aspect_ratios": ["16:9", "9:16"],
+    "max_duration": "8 seconds",
+    "resolution": "720p",
+    "progress_tracking": true,
+    "structured_responses": true
+  }
+}

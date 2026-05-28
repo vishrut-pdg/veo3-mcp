@@ -2,6 +2,7 @@ import os
 from mcp.server.fastmcp import FastMCP
 from google import genai
 from google.genai import types
+from google.cloud import storage
 
 PORT = int(os.environ.get("PORT", 8080))
 
@@ -14,6 +15,23 @@ OUTPUT_GCS_URI = os.environ.get("VIDEO_OUTPUT_GCS_URI")
 client = genai.Client(vertexai=True, project=PROJECT_ID, location=LOCATION)
 
 VEO_MODEL = "veo-3.0-generate-001"
+
+_storage_client = storage.Client(project=PROJECT_ID) if PROJECT_ID else None
+
+
+def _parse_gcs_uri(uri: str) -> tuple[str, str]:
+    path = uri.removeprefix("gs://")
+    bucket, _, prefix = path.partition("/")
+    return bucket, prefix
+
+
+def _infer_image_mime_type(uri: str) -> str:
+    lower = uri.lower()
+    if lower.endswith(".png"):
+        return "image/png"
+    if lower.endswith(".webp"):
+        return "image/webp"
+    return "image/jpeg"
 
 
 @mcp.tool()
@@ -74,6 +92,90 @@ def fetch_video_result(operation_name: str) -> str:
         return f"Done. Generated {len(uris)} video(s): {uris}"
     except Exception as e:
         return f"Error fetching operation: {str(e)}"
+
+
+@mcp.tool()
+def generate_video_from_image(
+    prompt: str,
+    image_gcs_uri: str,
+    sample_count: int = 1,
+    resolution: str = "720p",
+) -> str:
+    """
+    Generates a video animated from a starting image using Google Veo 3.0 on Vertex AI.
+
+    Args:
+        prompt: Description of the motion / action to animate from the image.
+        image_gcs_uri: Google Cloud Storage URI of the source image (e.g. gs://bucket/path/img.jpg).
+        sample_count: Number of video samples to generate (1-4).
+        resolution: Output resolution, e.g. "720p" or "1080p".
+    """
+    if not OUTPUT_GCS_URI:
+        return "Error: VIDEO_OUTPUT_GCS_URI is not set on the server."
+    if not image_gcs_uri.startswith("gs://"):
+        return "Error: image_gcs_uri must be a gs:// URI."
+
+    try:
+        image = types.Image(
+            gcs_uri=image_gcs_uri,
+            mime_type=_infer_image_mime_type(image_gcs_uri),
+        )
+        operation = client.models.generate_videos(
+            model=VEO_MODEL,
+            prompt=prompt,
+            image=image,
+            config=types.GenerateVideosConfig(
+                output_gcs_uri=OUTPUT_GCS_URI,
+                number_of_videos=sample_count,
+                resolution=resolution,
+            ),
+        )
+        return (
+            f"Image-to-video generation started. Operation name: {operation.name}. "
+            f"Call fetch_video_result with this name to poll."
+        )
+    except Exception as e:
+        return f"Error triggering image-to-video generation: {str(e)}"
+
+
+@mcp.tool()
+def list_generated_videos(limit: int = 20) -> str:
+    """
+    Lists previously generated videos in the configured GCS output bucket,
+    newest first.
+
+    Args:
+        limit: Max number of videos to return (default 20).
+    """
+    if not OUTPUT_GCS_URI:
+        return "Error: VIDEO_OUTPUT_GCS_URI is not set on the server."
+    if _storage_client is None:
+        return "Error: GOOGLE_CLOUD_PROJECT is not set on the server."
+
+    try:
+        bucket_name, prefix = _parse_gcs_uri(OUTPUT_GCS_URI)
+        blobs = _storage_client.list_blobs(bucket_name, prefix=prefix)
+        videos = [
+            {
+                "uri": f"gs://{bucket_name}/{b.name}",
+                "size_mb": round((b.size or 0) / 1024 / 1024, 2),
+                "created": b.time_created.isoformat() if b.time_created else None,
+            }
+            for b in blobs
+            if b.name.lower().endswith((".mp4", ".mov", ".webm"))
+        ]
+        videos.sort(key=lambda v: v["created"] or "", reverse=True)
+        videos = videos[:limit]
+
+        if not videos:
+            return f"No videos found under {OUTPUT_GCS_URI}."
+
+        lines = [f"Found {len(videos)} video(s):"]
+        for v in videos:
+            lines.append(f"- {v['uri']} ({v['size_mb']} MB, created {v['created']})")
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Error listing videos: {str(e)}"
 
 
 if __name__ == "__main__":

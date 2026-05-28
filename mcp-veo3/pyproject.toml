@@ -1,0 +1,104 @@
+[project]
+name = "mcp-veo3"
+version = "1.0.1"
+description = "MCP Veo 3 Video Generator - A Model Context Protocol server for Veo 3 video generation"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Dayong Huang", email = "dayong.d1@gmail.com"}
+]
+maintainers = [
+    {name = "Dayong Huang", email = "dayong.d1@gmail.com"}
+]
+keywords = ["mcp", "video", "generation", "ai", "veo", "gemini", "google", "model-context-protocol", "fastmcp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Multimedia :: Video",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+dependencies = [
+    "fastmcp>=2.11.0",
+    "google-genai>=0.3.0",
+    "pydantic>=2.11.0",
+    "python-dotenv>=1.1.0",
+    "Pillow>=10.0.0",
+]
+
+[project.scripts]
+mcp-veo3 = "mcp_veo3:main"
+
+[project.entry-points."mcp.servers"]
+veo3 = "mcp_veo3:main"
+
+[project.urls]
+Homepage = "https://github.com/dayongd1/mcp-veo3"
+Repository = "https://github.com/dayongd1/mcp-veo3"
+Documentation = "https://github.com/dayongd1/mcp-veo3/blob/main/README.md"
+"Bug Tracker" = "https://github.com/dayongd1/mcp-veo3/issues"
+Changelog = "https://github.com/dayongd1/mcp-veo3/releases"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "mcp_veo3.py",
+    "__init__.py",
+    "README.md",
+    "LICENSE",
+    "env_example.txt",
+    "config.json",
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "mcp_veo3.py",
+    "__init__.py",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+testpaths = ["examples"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"
