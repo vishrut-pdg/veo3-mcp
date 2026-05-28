@@ -1,0 +1,4 @@
+mcp
+google-genai
+fastapi
+uvicorn
