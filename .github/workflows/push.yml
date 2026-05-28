@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  GCP_REGION: us-central1
+  GCP_REGION: asia-south1
   AR_REPOSITORY: veo3-mcp-server
   IMAGE_NAME: veo3-mcp
 
