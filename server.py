@@ -77,4 +77,4 @@ def fetch_video_result(operation_name: str) -> str:
 
 
 if __name__ == "__main__":
-    mcp.run(transport="sse")
+    mcp.run(transport="streamable-http")
