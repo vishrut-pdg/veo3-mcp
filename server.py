@@ -3,7 +3,9 @@ from mcp.server.fastmcp import FastMCP
 from google import genai
 from google.genai import types
 
-mcp = FastMCP("Veo3-Vertex-MCP")
+PORT = int(os.environ.get("PORT", 8080))
+
+mcp = FastMCP("Veo3-Vertex-MCP", host="0.0.0.0", port=PORT)
 
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -75,5 +77,4 @@ def fetch_video_result(operation_name: str) -> str:
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    mcp.run(transport="sse", host="0.0.0.0", port=port)
+    mcp.run(transport="sse")
