@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from mcp.server.fastmcp import FastMCP
 from google import genai
 from google.genai import types
@@ -32,6 +33,16 @@ def _infer_image_mime_type(uri: str) -> str:
     if lower.endswith(".webp"):
         return "image/webp"
     return "image/jpeg"
+
+
+def _signed_url(gcs_uri: str, hours: int = 24) -> str:
+    bucket_name, blob_name = _parse_gcs_uri(gcs_uri)
+    blob = _storage_client.bucket(bucket_name).blob(blob_name)
+    return blob.generate_signed_url(
+        version="v4",
+        expiration=timedelta(hours=hours),
+        method="GET",
+    )
 
 
 @mcp.tool()
@@ -88,8 +99,20 @@ def fetch_video_result(operation_name: str) -> str:
             return f"Operation failed: {operation.error}"
 
         videos = getattr(operation.response, "generated_videos", None) or []
-        uris = [v.video.uri for v in videos if v.video and v.video.uri]
-        return f"Done. Generated {len(uris)} video(s): {uris}"
+        lines = []
+        for v in videos:
+            if not (v.video and v.video.uri):
+                continue
+            gcs_uri = v.video.uri
+            name = gcs_uri.rsplit("/", 1)[-1]
+            try:
+                url = _signed_url(gcs_uri)
+                lines.append(f"- [{name}]({url}) — playable for 24h. Source: `{gcs_uri}`")
+            except Exception as sig_err:
+                lines.append(f"- {gcs_uri} (signed URL failed: {sig_err})")
+        if not lines:
+            return "Done, but no video URIs found in the response."
+        return f"Done. Generated {len(lines)} video(s):\n" + "\n".join(lines)
     except Exception as e:
         return f"Error fetching operation: {str(e)}"
 
@@ -158,6 +181,7 @@ def list_generated_videos(limit: int = 20) -> str:
         videos = [
             {
                 "uri": f"gs://{bucket_name}/{b.name}",
+                "name": b.name.rsplit("/", 1)[-1],
                 "size_mb": round((b.size or 0) / 1024 / 1024, 2),
                 "created": b.time_created.isoformat() if b.time_created else None,
             }
@@ -172,7 +196,13 @@ def list_generated_videos(limit: int = 20) -> str:
 
         lines = [f"Found {len(videos)} video(s):"]
         for v in videos:
-            lines.append(f"- {v['uri']} ({v['size_mb']} MB, created {v['created']})")
+            try:
+                url = _signed_url(v["uri"])
+                lines.append(
+                    f"- [{v['name']}]({url}) ({v['size_mb']} MB, {v['created']}) — playable for 24h"
+                )
+            except Exception:
+                lines.append(f"- {v['uri']} ({v['size_mb']} MB, {v['created']})")
         return "\n".join(lines)
     except Exception as e:
         return f"Error listing videos: {str(e)}"
